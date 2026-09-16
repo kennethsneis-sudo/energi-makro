@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energi og makro</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#E6E8EB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Energi">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#E6E8EB;
+  --surface:#FFFFFF;
+  --line:#C3C9D2;
+  --line-soft:#DFE3E8;
+  --ink:#222B3A;
+  --ink-2:#4A566B;
+  --muted:#77839A;
+  --under:#A8322A;
+  --over:#17636B;
+  --cho:#B5851B;
+  --pro:#35678F;
+  --fat:#7A6091;
+  --demo:#8A5B00;
+  --w-col:1180px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:"Archivo","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.wrap{max-width:var(--w-col);margin:0 auto;padding:22px 20px 60px}
+
+/* ---------- topp ---------- */
+.top{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+.top h1{font-size:23px;font-weight:600;letter-spacing:-.015em;margin:0}
+.top .range{color:var(--ink-2);font-size:14px}
+.top{margin-bottom:16px}
+
+/* ---------- paneler ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:2px;min-width:0}
+.grid-top>*,.grid-bottom>*,.tscroll{min-width:0}
+.panel > h2{
+  font-size:13px;font-weight:600;color:var(--ink-2);margin:0;
+  padding:9px 14px;border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:center;gap:10px;
+}
+.panel > h2 .note{font-weight:400;color:var(--muted);font-size:12px}
+.panel > h2 .spacer{margin-left:auto}
+
+.grid-top{display:grid;grid-template-columns:326px 1fr}
+.grid-top .daycard{border-right:1px solid var(--line-soft)}
+.grid-bottom{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:14px}
+
+/* ---------- dagskort ---------- */
+.daycard{padding:14px 14px 12px}
+.balrow{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line-soft)}
+.balcell{padding:13px 16px 14px;border-right:1px solid var(--line-soft)}
+.balcell:last-child{border-right:0}
+.balance .v.sm{font-size:31px}
+@media (max-width:1040px){
+  .balcell{padding:11px 12px 12px}
+  .balance .v{font-size:34px}
+  .balance .v.sm{font-size:25px}
+  .balcell .dlabel{font-size:11.5px}
+  .balance-cap{font-size:11.5px}
+}
+@media (max-width:620px){
+  .balrow{grid-template-columns:1fr}
+  .balcell{border-right:0;border-bottom:1px solid var(--line-soft)}
+  .balcell:last-child{border-bottom:0}
+}
+.balance .u.sm{font-size:12.5px;padding-bottom:3px;color:var(--muted)}
+.daycard .dlabel{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.balance{display:flex;align-items:flex-end;gap:8px;margin-bottom:2px}
+.balance .v{font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.balance .u{font-size:14px;color:var(--ink-2);padding-bottom:5px}
+.balance-cap{font-size:12.5px;color:var(--ink-2);margin-bottom:0}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border-top:1px solid var(--line-soft);padding-top:9px}
+.kv dt{color:var(--ink-2);font-size:13px}
+.kv dd{margin:0;text-align:right;font-weight:600;font-size:13.5px}
+.kv dd small{font-weight:400;color:var(--muted);font-size:12px;margin-left:5px}
+
+/* ---------- makrobarer ---------- */
+.macros{padding:18px 16px 14px}
+.mgroup{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+.mgroup:last-of-type{border-bottom:0;padding-bottom:2px;margin-bottom:6px}
+.mname{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:9px}
+.mrow{display:grid;grid-template-columns:38px 1fr 182px;align-items:center;gap:11px;margin-bottom:9px}
+.mrow:last-child{margin-bottom:0}
+.mwin{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mrow.now .mwin{color:var(--ink-2);font-weight:600}
+.track{position:relative;height:13px;background:#F1F3F5;border:1px solid var(--line-soft)}
+.mrow.now .track{height:21px}
+.fill{position:absolute;left:0;top:0;bottom:0;opacity:.55}
+.mrow.now .fill{opacity:1}
+.tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.mrow.now .tick{top:-4px;bottom:-4px}
+.tick::after{
+  content:attr(data-l);position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  font-size:10.5px;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+.mval{font-size:12.5px;text-align:right;color:var(--muted)}
+.mrow.now .mval{font-size:13px;color:var(--ink-2)}
+.mval b{color:var(--ink-2);font-weight:600}
+.mrow.now .mval b{color:var(--ink)}
+.mval .gap{margin-left:7px;font-weight:600}
+.legend{font-size:11.5px;color:var(--muted);border-top:1px solid var(--line-soft);padding-top:8px;margin-top:12px}
+
+/* ---------- dagsstripe ---------- */
+.strip{display:flex;gap:2px;padding:12px 14px 14px;overflow-x:auto;scrollbar-width:thin}
+.stripwrap{position:relative}
+.stripwrap::before,.stripwrap::after{content:"";position:absolute;top:34px;bottom:1px;width:18px;pointer-events:none}
+.stripwrap::before{left:1px;background:linear-gradient(90deg,var(--surface),rgba(255,255,255,0))}
+.stripwrap::after{right:1px;background:linear-gradient(270deg,var(--surface),rgba(255,255,255,0))}
+.cell{
+  flex:1 1 0;min-width:34px;border:1px solid var(--line-soft);background:#FAFBFC;
+  padding:5px 3px 4px;text-align:center;cursor:pointer;border-radius:1px;
+}
+.cell:hover{border-color:var(--muted)}
+.cell:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.cell.sel{border-color:var(--ink);background:#fff;box-shadow:inset 0 0 0 1px var(--ink)}
+.cell .wd{font-size:10px;color:var(--muted)}
+.cell .dd{font-size:12px;font-weight:600}
+.cell .bar{height:27px;margin-top:4px;display:flex;flex-direction:column}
+.cell .bar .up{height:13px;display:flex;align-items:flex-end}
+.cell .bar .mid{height:1px;background:var(--line)}
+.cell .bar .dn{height:13px}
+.cell .bar b{display:block;width:100%}
+
+/* ---------- segmentert kontroll ---------- */
+.seg{display:flex;gap:0;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.seg button{
+  font:inherit;font-size:12px;padding:4px 10px;background:#fff;border:0;
+  border-right:1px solid var(--line-soft);color:var(--ink-2);cursor:pointer;
+}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* ---------- graf ---------- */
+.chartbox{padding:10px 14px 6px}
+.tgrid{display:grid;gap:10px;padding:0 12px}
+.tgrid-2{grid-template-columns:repeat(2,1fr);padding-top:12px;padding-bottom:10px}
+.tgrid-3{grid-template-columns:repeat(3,1fr);padding-bottom:12px}
+.tcell{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:12px;
+  padding:12px 14px;border:1px solid var(--line);border-radius:2px;background:var(--surface)}
+.tgrid-3 .tcell{grid-template-columns:86px 1fr;gap:10px}
+.tarrow{width:100%;height:58px}
+@media (max-width:1100px){
+  .tcell{grid-template-columns:96px 1fr;gap:10px;padding:10px 11px}
+  .tgrid-3 .tcell{grid-template-columns:62px 1fr;gap:8px}
+  .tarrow{height:50px}
+  .tdir{font-size:14px}
+  .trate{font-size:12.5px}
+  .ttot{font-size:11px}
+}
+@media (max-width:820px){
+  .tcell{grid-template-columns:70px 1fr}
+  .tgrid-3 .tcell{grid-template-columns:48px 1fr}
+  .tgrid{gap:7px;padding:0 8px}
+  .tarrow{height:44px}
+}
+@media (max-width:560px){
+  .tgrid-2,.tgrid-3{grid-template-columns:1fr}
+}
+.tname{font-size:12.5px;color:var(--muted)}
+.tdir{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.trate{font-size:13px;font-weight:600;color:var(--ink)}
+.ttot{font-size:11.5px;color:var(--muted)}
+svg{display:block;width:100%;height:auto}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);padding:0 14px 12px}
+.chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:16px;height:0;border-top-width:2px;border-top-style:solid}
+.swatch.block{height:10px;border:0}
+
+/* ---------- tabeller ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:11.5px}
+th:first-child,td:first-child{text-align:left}
+tbody tr:last-child td{border-bottom:0}
+tfoot td{font-weight:600;border-bottom:0;padding-top:8px}
+tbody tr.cur td{background:#F4F6F8;font-weight:600}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---------- rullerende ---------- */
+.rollhead{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;padding:9px 14px 6px;font-size:11.5px;color:var(--muted)}
+.rollhead span:not(:first-child){text-align:right;min-width:62px}
+.rollrow{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;padding:6px 14px;border-top:1px solid var(--line-soft);font-size:13px}
+.rollrow span:not(:first-child){text-align:right;min-width:62px;font-variant-numeric:tabular-nums}
+.rollrow .d{font-weight:600}
+
+/* ---------- fotpaneler ---------- */
+
+@media (max-width:960px){
+  .grid-top,.grid-bottom{grid-template-columns:1fr}
+  .grid-top .daycard{border-right:0;border-bottom:1px solid var(--line-soft)}
+  .mrow{grid-template-columns:34px 1fr;grid-template-areas:"w b" ". v";row-gap:3px}
+  .mrow .mwin{grid-area:w}.mrow .track{grid-area:b}.mrow .mval{grid-area:v;text-align:left}
+}
+
+/* ---------- mobil ---------- */
+@media (max-width:620px){
+  .balrow{grid-template-columns:1fr 1fr;grid-template-areas:"dag dag" "w7 w21"}
+  .balcell:nth-child(1){grid-area:dag;border-bottom:1px solid var(--line-soft);border-right:0}
+  .balcell:nth-child(2){grid-area:w7;border-right:1px solid var(--line-soft)}
+  .balcell:nth-child(3){grid-area:w21}
+  .balance .v{font-size:38px}
+  .balance .v.sm{font-size:22px}
+  .balance .u.sm{font-size:11px}
+}
+@media (max-width:520px){
+  .wrap{padding:14px 10px 40px}
+  .top h1{font-size:20px}
+  .sub{font-size:11.5px;margin-bottom:12px}
+  .panel > h2{padding:8px 11px;font-size:12.5px;flex-wrap:wrap;gap:6px}
+  .panel > h2 .note{font-size:11px}
+  .strip{padding:10px 8px;gap:3px;scroll-snap-type:x proximity}
+  .cell{min-width:40px;scroll-snap-align:center}
+  .daycard{padding:11px}
+  .kv dt,.kv dd{font-size:12.5px}
+  .macros{padding:14px 11px 12px}
+  .mrow{grid-template-columns:30px 1fr;row-gap:2px;margin-bottom:7px}
+  .mgroup{margin-bottom:10px;padding-bottom:8px}
+  .mval{font-size:12px}
+  .mrow.now .mval{font-size:12.5px}
+  .tick::after{font-size:10px;top:-14px}
+  .tcell{grid-template-columns:56px 1fr;gap:9px;padding:9px 10px}
+  .tgrid-3 .tcell{grid-template-columns:56px 1fr}
+  .tarrow{height:38px}
+  .tdir{font-size:14px}
+  .trate{font-size:12.5px}
+  .ttot{font-size:11px}
+  th,td{padding:5px 7px;font-size:11.5px}
+  th:first-child,td:first-child{position:sticky;left:0;background:var(--surface);z-index:1;
+    box-shadow:1px 0 0 var(--line-soft)}
+  tbody tr.cur td:first-child{background:#F4F6F8}
+  tfoot td:first-child{background:var(--surface)}
+  .rollrow,.rollhead{padding-left:11px;padding-right:11px}
+  .chart-legend{padding:0 11px 10px;font-size:11px;gap:10px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <h1>Energi og makro</h1>
+    <span class="range num" id="rangeLabel"></span>
+
+  </div>
+
+
+
+  <section class="panel stripwrap" style="margin-bottom:14px">
+    <h2>Siste 21 dager</h2>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <section class="panel" style="margin-bottom:14px">
+    <h2>Dagen</h2>
+    <div class="balrow">
+      <div class="balcell">
+        <div class="dlabel num" id="dayDate"></div>
+        <div class="balance"><span class="v num" id="balVal"></span><span class="u">kcal</span></div>
+        <div class="balance-cap" id="balCap"></div>
+      </div>
+      <div class="balcell">
+        <div class="dlabel num" id="r7Label"></div>
+        <div class="balance"><span class="v sm num" id="bal7"></span><span class="u sm">kcal/dag</span></div>
+        <div class="balance-cap num" id="bal7cap"></div>
+      </div>
+      <div class="balcell">
+        <div class="dlabel num" id="r21Label"></div>
+        <div class="balance"><span class="v sm num" id="bal21"></span><span class="u sm">kcal/dag</span></div>
+        <div class="balance-cap num" id="bal21cap"></div>
+      </div>
+    </div>
+    <div class="grid-top">
+      <div class="daycard">
+        <dl class="kv" style="border-top:0;padding-top:0">
+          <dt>Inntak</dt><dd class="num" id="kIn"></dd>
+          <dt>Behov</dt><dd class="num" id="kNeed"></dd>
+          <dt>Trening</dt><dd class="num" id="kTrain"></dd>
+          <dt>Morgenvekt</dt><dd class="num" id="kWeight"></dd>
+        </dl>
+      </div>
+      <div class="macros" id="macroBars"></div>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-bottom:14px">
+    <h2>Trendretning<span class="spacer"></span><span class="note num" id="trendNote"></span></h2>
+    <div class="tgrid tgrid-2" id="trendTop"></div>
+    <div class="tgrid tgrid-3" id="trendBottom"></div>
+
+  </section>
+
+  <div class="grid-bottom">
+    <section class="panel">
+      <h2>Uke</h2>
+      <div class="tscroll"><table id="weekTable"></table></div>
+    </section>
+
+    <section class="panel">
+      <h2>Rullerende snitt</h2>
+      <div class="rollhead"><span></span><span>7 d</span><span>21 d</span><span>diff</span></div>
+      <div id="rollRows"></div>
+    </section>
+  </div>
+
+
+
+</div>
+
+<script>
+/* ============================================================
+   DATAKONTRAKT — DAYS genereres av scripts/bygg_energi_makro_app.py.
+   Resten av fila er visning.
+
+   DAYS = [{
+     date:      "2026-09-06",   // ISO
+     kcalIn:    5220,           // MFP, sum alle måltider (ellers «kcal spist» i Historisk); null = ikke registrert
+     cho:       901,            // g, MFP; null når ikke registrert
+     pro:       203,            // g
+     fat:        93,            // g
+     kcalNeed:  6268,           // 2100 + trainKcal
+     choNeed:   1248,           // g, (kcalNeed − 600 − 675) / 4
+     proNeed:   150,            // g, fast
+     fatNeed:    75,            // g, fast
+     weight:    73.3,           // kg, morgenvekt; null når den mangler
+     trainKcal: 4168,           // «kcal økt» i Historisk (wattpedaler), 0 på hviledag
+     trainMin:  304             // «Varighet» i Historisk, 0 på hviledag
+   }, ...]   sortert stigende, én rad per kalenderdag, ingen hull.
+   ============================================================ */
+
+/* Markering «kan ikke fôres fullt» i makroraden når choNeed/vekt > IKKE_FORBAR_GKG.
+   Ikke besluttet — står av til Kenneth har tatt stilling. */
+const VIS_IKKE_FORBAR = false;
+const IKKE_FORBAR_GKG = 12;
+
+/* === DATA-START — generert av Code, ikke rediger manuelt === */
+const DAYS = [
+  {date:"2026-03-11", kcalIn:3166, cho:null, pro:null, fat:null, kcalNeed:3613, choNeed:584, proNeed:150, fatNeed:75, weight:73.7, trainKcal:1513, trainMin:120},
+  {date:"2026-03-12", kcalIn:3182, cho:null, pro:null, fat:null, kcalNeed:3688, choNeed:603, proNeed:150, fatNeed:75, weight:null, trainKcal:1588, trainMin:121},
+  {date:"2026-03-13", kcalIn:3309, cho:null, pro:null, fat:null, kcalNeed:3719, choNeed:611, proNeed:150, fatNeed:75, weight:73.9, trainKcal:1619, trainMin:121},
+  {date:"2026-03-14", kcalIn:3548, cho:null, pro:null, fat:null, kcalNeed:4591, choNeed:829, proNeed:150, fatNeed:75, weight:73.6, trainKcal:2491, trainMin:181},
+  {date:"2026-03-15", kcalIn:3490, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-03-16", kcalIn:3709, cho:null, pro:null, fat:null, kcalNeed:3630, choNeed:589, proNeed:150, fatNeed:75, weight:73.3, trainKcal:1530, trainMin:121},
+  {date:"2026-03-17", kcalIn:4018, cho:null, pro:null, fat:null, kcalNeed:3918, choNeed:661, proNeed:150, fatNeed:75, weight:73.3, trainKcal:1818, trainMin:121},
+  {date:"2026-03-18", kcalIn:3476, cho:null, pro:null, fat:null, kcalNeed:4054, choNeed:695, proNeed:150, fatNeed:75, weight:73.4, trainKcal:1954, trainMin:134},
+  {date:"2026-03-19", kcalIn:3868, cho:null, pro:null, fat:null, kcalNeed:4126, choNeed:713, proNeed:150, fatNeed:75, weight:null, trainKcal:2026, trainMin:155},
+  {date:"2026-03-20", kcalIn:3420, cho:null, pro:null, fat:null, kcalNeed:3899, choNeed:656, proNeed:150, fatNeed:75, weight:74.0, trainKcal:1799, trainMin:125},
+  {date:"2026-03-21", kcalIn:4911, cho:null, pro:null, fat:null, kcalNeed:4879, choNeed:901, proNeed:150, fatNeed:75, weight:null, trainKcal:2779, trainMin:179},
+  {date:"2026-03-22", kcalIn:3370, cho:null, pro:null, fat:null, kcalNeed:4077, choNeed:700, proNeed:150, fatNeed:75, weight:null, trainKcal:1977, trainMin:150},
+  {date:"2026-03-23", kcalIn:3191, cho:null, pro:null, fat:null, kcalNeed:3378, choNeed:526, proNeed:150, fatNeed:75, weight:74.4, trainKcal:1278, trainMin:108},
+  {date:"2026-03-24", kcalIn:3338, cho:null, pro:null, fat:null, kcalNeed:3965, choNeed:672, proNeed:150, fatNeed:75, weight:73.8, trainKcal:1865, trainMin:121},
+  {date:"2026-03-25", kcalIn:3692, cho:null, pro:null, fat:null, kcalNeed:3951, choNeed:669, proNeed:150, fatNeed:75, weight:73.8, trainKcal:1851, trainMin:135},
+  {date:"2026-03-26", kcalIn:3611, cho:null, pro:null, fat:null, kcalNeed:4591, choNeed:829, proNeed:150, fatNeed:75, weight:73.7, trainKcal:2491, trainMin:163},
+  {date:"2026-03-27", kcalIn:3487, cho:null, pro:null, fat:null, kcalNeed:3657, choNeed:596, proNeed:150, fatNeed:75, weight:73.3, trainKcal:1557, trainMin:122},
+  {date:"2026-03-28", kcalIn:3207, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-03-29", kcalIn:5579, cho:null, pro:null, fat:null, kcalNeed:7424, choNeed:1537, proNeed:150, fatNeed:75, weight:null, trainKcal:5324, trainMin:398},
+  {date:"2026-03-30", kcalIn:5264, cho:null, pro:null, fat:null, kcalNeed:6501, choNeed:1306, proNeed:150, fatNeed:75, weight:73.6, trainKcal:4401, trainMin:373},
+  {date:"2026-03-31", kcalIn:5860, cho:null, pro:null, fat:null, kcalNeed:6936, choNeed:1415, proNeed:150, fatNeed:75, weight:73.8, trainKcal:4836, trainMin:370},
+  {date:"2026-04-01", kcalIn:5510, cho:null, pro:null, fat:null, kcalNeed:6375, choNeed:1275, proNeed:150, fatNeed:75, weight:73.6, trainKcal:4275, trainMin:356},
+  {date:"2026-04-02", kcalIn:5624, cho:null, pro:null, fat:null, kcalNeed:7036, choNeed:1440, proNeed:150, fatNeed:75, weight:74.5, trainKcal:4936, trainMin:378},
+  {date:"2026-04-03", kcalIn:5269, cho:null, pro:null, fat:null, kcalNeed:5959, choNeed:1171, proNeed:150, fatNeed:75, weight:74.1, trainKcal:3859, trainMin:325},
+  {date:"2026-04-04", kcalIn:5606, cho:null, pro:null, fat:null, kcalNeed:6772, choNeed:1374, proNeed:150, fatNeed:75, weight:74.5, trainKcal:4672, trainMin:357},
+  {date:"2026-04-05", kcalIn:5414, cho:null, pro:null, fat:null, kcalNeed:6758, choNeed:1371, proNeed:150, fatNeed:75, weight:74.3, trainKcal:4658, trainMin:384},
+  {date:"2026-04-06", kcalIn:3826, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-04-07", kcalIn:3376, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:75.2, trainKcal:0, trainMin:0},
+  {date:"2026-04-08", kcalIn:2959, cho:null, pro:null, fat:null, kcalNeed:3235, choNeed:490, proNeed:150, fatNeed:75, weight:null, trainKcal:1135, trainMin:94},
+  {date:"2026-04-09", kcalIn:2780, cho:null, pro:null, fat:null, kcalNeed:3735, choNeed:615, proNeed:150, fatNeed:75, weight:null, trainKcal:1635, trainMin:120},
+  {date:"2026-04-10", kcalIn:2960, cho:null, pro:null, fat:null, kcalNeed:3869, choNeed:648, proNeed:150, fatNeed:75, weight:null, trainKcal:1769, trainMin:124},
+  {date:"2026-04-11", kcalIn:3459, cho:null, pro:null, fat:null, kcalNeed:3477, choNeed:550, proNeed:150, fatNeed:75, weight:null, trainKcal:1377, trainMin:106},
+  {date:"2026-04-12", kcalIn:525, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-04-13", kcalIn:3779, cho:null, pro:null, fat:null, kcalNeed:3999, choNeed:681, proNeed:150, fatNeed:75, weight:74.4, trainKcal:1899, trainMin:130},
+  {date:"2026-04-14", kcalIn:3292, cho:null, pro:null, fat:null, kcalNeed:3519, choNeed:561, proNeed:150, fatNeed:75, weight:72.9, trainKcal:1419, trainMin:121},
+  {date:"2026-04-15", kcalIn:3078, cho:null, pro:null, fat:null, kcalNeed:3901, choNeed:656, proNeed:150, fatNeed:75, weight:null, trainKcal:1801, trainMin:136},
+  {date:"2026-04-16", kcalIn:3924, cho:null, pro:null, fat:null, kcalNeed:3814, choNeed:635, proNeed:150, fatNeed:75, weight:73.9, trainKcal:1714, trainMin:112},
+  {date:"2026-04-17", kcalIn:2092, cho:null, pro:null, fat:null, kcalNeed:3248, choNeed:493, proNeed:150, fatNeed:75, weight:73.1, trainKcal:1148, trainMin:92},
+  {date:"2026-04-18", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:4146, choNeed:718, proNeed:150, fatNeed:75, weight:null, trainKcal:2046, trainMin:135},
+  {date:"2026-04-19", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:3539, choNeed:566, proNeed:150, fatNeed:75, weight:null, trainKcal:1439, trainMin:90},
+  {date:"2026-04-20", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-04-21", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:4007, choNeed:683, proNeed:150, fatNeed:75, weight:74.6, trainKcal:1907, trainMin:138},
+  {date:"2026-04-22", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:4295, choNeed:755, proNeed:150, fatNeed:75, weight:74.4, trainKcal:2195, trainMin:151},
+  {date:"2026-04-23", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:4170, choNeed:724, proNeed:150, fatNeed:75, weight:73.8, trainKcal:2070, trainMin:153},
+  {date:"2026-04-24", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:4027, choNeed:688, proNeed:150, fatNeed:75, weight:74.6, trainKcal:1927, trainMin:132},
+  {date:"2026-04-25", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:3336, choNeed:515, proNeed:150, fatNeed:75, weight:null, trainKcal:1236, trainMin:96},
+  {date:"2026-04-26", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:4339, choNeed:766, proNeed:150, fatNeed:75, weight:null, trainKcal:2239, trainMin:152},
+  {date:"2026-04-27", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:3119, choNeed:461, proNeed:150, fatNeed:75, weight:73.6, trainKcal:1019, trainMin:90},
+  {date:"2026-04-28", kcalIn:null, cho:null, pro:null, fat:null, kcalNeed:5057, choNeed:946, proNeed:150, fatNeed:75, weight:73.4, trainKcal:2957, trainMin:182},
+  {date:"2026-04-29", kcalIn:3740, cho:null, pro:null, fat:null, kcalNeed:3859, choNeed:646, proNeed:150, fatNeed:75, weight:74.2, trainKcal:1759, trainMin:130},
+  {date:"2026-04-30", kcalIn:3599, cho:null, pro:null, fat:null, kcalNeed:3938, choNeed:666, proNeed:150, fatNeed:75, weight:74.7, trainKcal:1838, trainMin:127},
+  {date:"2026-05-01", kcalIn:4486, cho:null, pro:null, fat:null, kcalNeed:4732, choNeed:864, proNeed:150, fatNeed:75, weight:74.0, trainKcal:2632, trainMin:186},
+  {date:"2026-05-02", kcalIn:2999, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:73.3, trainKcal:0, trainMin:0},
+  {date:"2026-05-03", kcalIn:3970, cho:null, pro:null, fat:null, kcalNeed:4826, choNeed:888, proNeed:150, fatNeed:75, weight:72.8, trainKcal:2726, trainMin:180},
+  {date:"2026-05-04", kcalIn:3552, cho:null, pro:null, fat:null, kcalNeed:3894, choNeed:655, proNeed:150, fatNeed:75, weight:74.0, trainKcal:1794, trainMin:132},
+  {date:"2026-05-05", kcalIn:4265, cho:null, pro:null, fat:null, kcalNeed:4229, choNeed:738, proNeed:150, fatNeed:75, weight:73.7, trainKcal:2129, trainMin:149},
+  {date:"2026-05-06", kcalIn:3771, cho:null, pro:null, fat:null, kcalNeed:3870, choNeed:649, proNeed:150, fatNeed:75, weight:73.9, trainKcal:1770, trainMin:132},
+  {date:"2026-05-07", kcalIn:3607, cho:null, pro:null, fat:null, kcalNeed:4129, choNeed:714, proNeed:150, fatNeed:75, weight:73.8, trainKcal:2029, trainMin:140},
+  {date:"2026-05-08", kcalIn:3556, cho:null, pro:null, fat:null, kcalNeed:3932, choNeed:664, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1832, trainMin:139},
+  {date:"2026-05-09", kcalIn:3602, cho:null, pro:null, fat:null, kcalNeed:3560, choNeed:571, proNeed:150, fatNeed:75, weight:73.7, trainKcal:1460, trainMin:109},
+  {date:"2026-05-10", kcalIn:4722, cho:null, pro:null, fat:null, kcalNeed:5962, choNeed:1172, proNeed:150, fatNeed:75, weight:null, trainKcal:3862, trainMin:260},
+  {date:"2026-05-11", kcalIn:3359, cho:null, pro:null, fat:null, kcalNeed:2588, choNeed:328, proNeed:150, fatNeed:75, weight:null, trainKcal:488, trainMin:51},
+  {date:"2026-05-12", kcalIn:4144, cho:null, pro:null, fat:null, kcalNeed:3684, choNeed:602, proNeed:150, fatNeed:75, weight:null, trainKcal:1584, trainMin:99},
+  {date:"2026-05-13", kcalIn:3383, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-05-14", kcalIn:3358, cho:null, pro:null, fat:null, kcalNeed:3341, choNeed:516, proNeed:150, fatNeed:75, weight:null, trainKcal:1241, trainMin:99},
+  {date:"2026-05-15", kcalIn:3189, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:73.4, trainKcal:0, trainMin:0},
+  {date:"2026-05-16", kcalIn:3333, cho:null, pro:null, fat:null, kcalNeed:4046, choNeed:693, proNeed:150, fatNeed:75, weight:73.6, trainKcal:1946, trainMin:131},
+  {date:"2026-05-17", kcalIn:3723, cho:null, pro:null, fat:null, kcalNeed:4451, choNeed:794, proNeed:150, fatNeed:75, weight:73.5, trainKcal:2351, trainMin:158},
+  {date:"2026-05-18", kcalIn:3761, cho:null, pro:null, fat:null, kcalNeed:3762, choNeed:622, proNeed:150, fatNeed:75, weight:74.4, trainKcal:1662, trainMin:124},
+  {date:"2026-05-19", kcalIn:3957, cho:null, pro:null, fat:null, kcalNeed:3932, choNeed:664, proNeed:150, fatNeed:75, weight:73.9, trainKcal:1832, trainMin:124},
+  {date:"2026-05-20", kcalIn:3603, cho:null, pro:null, fat:null, kcalNeed:4116, choNeed:710, proNeed:150, fatNeed:75, weight:74.3, trainKcal:2016, trainMin:143},
+  {date:"2026-05-21", kcalIn:3113, cho:null, pro:null, fat:null, kcalNeed:2889, choNeed:404, proNeed:150, fatNeed:75, weight:null, trainKcal:789, trainMin:60},
+  {date:"2026-05-22", kcalIn:3997, cho:null, pro:null, fat:null, kcalNeed:3260, choNeed:496, proNeed:150, fatNeed:75, weight:null, trainKcal:1160, trainMin:67},
+  {date:"2026-05-23", kcalIn:3522, cho:null, pro:null, fat:null, kcalNeed:3212, choNeed:484, proNeed:150, fatNeed:75, weight:null, trainKcal:1112, trainMin:68},
+  {date:"2026-05-24", kcalIn:4408, cho:null, pro:null, fat:null, kcalNeed:4234, choNeed:740, proNeed:150, fatNeed:75, weight:null, trainKcal:2134, trainMin:139},
+  {date:"2026-05-25", kcalIn:4768, cho:null, pro:null, fat:null, kcalNeed:4167, choNeed:723, proNeed:150, fatNeed:75, weight:null, trainKcal:2067, trainMin:132},
+  {date:"2026-05-26", kcalIn:3132, cho:null, pro:null, fat:null, kcalNeed:2636, choNeed:340, proNeed:150, fatNeed:75, weight:null, trainKcal:536, trainMin:57},
+  {date:"2026-05-27", kcalIn:3312, cho:517, pro:126, fat:85, kcalNeed:2811, choNeed:384, proNeed:150, fatNeed:75, weight:73.7, trainKcal:711, trainMin:72},
+  {date:"2026-05-28", kcalIn:3189, cho:528, pro:189, fat:50, kcalNeed:4019, choNeed:686, proNeed:150, fatNeed:75, weight:null, trainKcal:1919, trainMin:137},
+  {date:"2026-05-29", kcalIn:3930, cho:576, pro:175, fat:107, kcalNeed:3313, choNeed:510, proNeed:150, fatNeed:75, weight:null, trainKcal:1213, trainMin:87},
+  {date:"2026-05-30", kcalIn:9040, cho:1460, pro:222, fat:264, kcalNeed:10866, choNeed:2398, proNeed:150, fatNeed:75, weight:null, trainKcal:8766, trainMin:645},
+  {date:"2026-05-31", kcalIn:2981, cho:393, pro:137, fat:94, kcalNeed:2814, choNeed:385, proNeed:150, fatNeed:75, weight:null, trainKcal:714, trainMin:73},
+  {date:"2026-06-01", kcalIn:3059, cho:479, pro:172, fat:61, kcalNeed:3259, choNeed:496, proNeed:150, fatNeed:75, weight:74.9, trainKcal:1159, trainMin:101},
+  {date:"2026-06-02", kcalIn:3494, cho:564, pro:163, fat:77, kcalNeed:3890, choNeed:654, proNeed:150, fatNeed:75, weight:74.4, trainKcal:1790, trainMin:128},
+  {date:"2026-06-03", kcalIn:4040, cho:609, pro:146, fat:122, kcalNeed:3506, choNeed:558, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1406, trainMin:108},
+  {date:"2026-06-04", kcalIn:4219, cho:677, pro:164, fat:99, kcalNeed:4322, choNeed:762, proNeed:150, fatNeed:75, weight:null, trainKcal:2222, trainMin:166},
+  {date:"2026-06-05", kcalIn:3666, cho:576, pro:160, fat:100, kcalNeed:3411, choNeed:534, proNeed:150, fatNeed:75, weight:null, trainKcal:1311, trainMin:102},
+  {date:"2026-06-06", kcalIn:4032, cho:null, pro:null, fat:null, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-06-07", kcalIn:3475, cho:437, pro:86, fat:103, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-06-08", kcalIn:3981, cho:611, pro:232, fat:78, kcalNeed:4436, choNeed:790, proNeed:150, fatNeed:75, weight:73.2, trainKcal:2336, trainMin:172},
+  {date:"2026-06-09", kcalIn:4397, cho:764, pro:164, fat:81, kcalNeed:4262, choNeed:747, proNeed:150, fatNeed:75, weight:74.0, trainKcal:2162, trainMin:143},
+  {date:"2026-06-10", kcalIn:3751, cho:647, pro:176, fat:59, kcalNeed:4934, choNeed:915, proNeed:150, fatNeed:75, weight:74.4, trainKcal:2834, trainMin:179},
+  {date:"2026-06-11", kcalIn:4651, cho:830, pro:155, fat:83, kcalNeed:5478, choNeed:1051, proNeed:150, fatNeed:75, weight:74.2, trainKcal:3378, trainMin:205},
+  {date:"2026-06-12", kcalIn:3482, cho:482, pro:164, fat:99, kcalNeed:2995, choNeed:430, proNeed:150, fatNeed:75, weight:null, trainKcal:895, trainMin:85},
+  {date:"2026-06-13", kcalIn:2807, cho:608, pro:112, fat:34, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-06-14", kcalIn:3051, cho:623, pro:116, fat:58, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-06-15", kcalIn:3556, cho:515, pro:243, fat:73, kcalNeed:3867, choNeed:648, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1767, trainMin:126},
+  {date:"2026-06-16", kcalIn:4099, cho:615, pro:180, fat:110, kcalNeed:4225, choNeed:738, proNeed:150, fatNeed:75, weight:73.1, trainKcal:2125, trainMin:155},
+  {date:"2026-06-17", kcalIn:4083, cho:640, pro:202, fat:90, kcalNeed:4807, choNeed:883, proNeed:150, fatNeed:75, weight:74.0, trainKcal:2707, trainMin:189},
+  {date:"2026-06-18", kcalIn:4155, cho:551, pro:253, fat:60, kcalNeed:3891, choNeed:654, proNeed:150, fatNeed:75, weight:74.0, trainKcal:1791, trainMin:129},
+  {date:"2026-06-19", kcalIn:4195, cho:635, pro:174, fat:117, kcalNeed:4720, choNeed:861, proNeed:150, fatNeed:75, weight:73.1, trainKcal:2620, trainMin:188},
+  {date:"2026-06-20", kcalIn:3629, cho:506, pro:182, fat:108, kcalNeed:3665, choNeed:598, proNeed:150, fatNeed:75, weight:73.6, trainKcal:1565, trainMin:115},
+  {date:"2026-06-21", kcalIn:3421, cho:504, pro:136, fat:117, kcalNeed:3345, choNeed:518, proNeed:150, fatNeed:75, weight:null, trainKcal:1245, trainMin:90},
+  {date:"2026-06-22", kcalIn:3426, cho:474, pro:151, fat:93, kcalNeed:2734, choNeed:365, proNeed:150, fatNeed:75, weight:null, trainKcal:634, trainMin:62},
+  {date:"2026-06-23", kcalIn:3373, cho:618, pro:112, fat:62, kcalNeed:3661, choNeed:596, proNeed:150, fatNeed:75, weight:null, trainKcal:1561, trainMin:124},
+  {date:"2026-06-24", kcalIn:3477, cho:551, pro:192, fat:70, kcalNeed:3465, choNeed:548, proNeed:150, fatNeed:75, weight:null, trainKcal:1365, trainMin:100},
+  {date:"2026-06-25", kcalIn:3566, cho:486, pro:174, fat:68, kcalNeed:3942, choNeed:667, proNeed:150, fatNeed:75, weight:73.9, trainKcal:1842, trainMin:147},
+  {date:"2026-06-26", kcalIn:4337, cho:628, pro:249, fat:104, kcalNeed:3321, choNeed:512, proNeed:150, fatNeed:75, weight:72.7, trainKcal:1221, trainMin:96},
+  {date:"2026-06-27", kcalIn:3554, cho:560, pro:219, fat:53, kcalNeed:3031, choNeed:439, proNeed:150, fatNeed:75, weight:73.0, trainKcal:931, trainMin:57},
+  {date:"2026-06-28", kcalIn:4795, cho:807, pro:155, fat:106, kcalNeed:5133, choNeed:964, proNeed:150, fatNeed:75, weight:73.3, trainKcal:3033, trainMin:224},
+  {date:"2026-06-29", kcalIn:2969, cho:432, pro:208, fat:41, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-06-30", kcalIn:3454, cho:484, pro:172, fat:95, kcalNeed:3446, choNeed:543, proNeed:150, fatNeed:75, weight:74.2, trainKcal:1346, trainMin:109},
+  {date:"2026-07-01", kcalIn:3399, cho:476, pro:204, fat:78, kcalNeed:3596, choNeed:580, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1496, trainMin:114},
+  {date:"2026-07-02", kcalIn:2664, cho:404, pro:138, fat:57, kcalNeed:3631, choNeed:589, proNeed:150, fatNeed:75, weight:null, trainKcal:1531, trainMin:105},
+  {date:"2026-07-03", kcalIn:3536, cho:536, pro:142, fat:96, kcalNeed:4028, choNeed:688, proNeed:150, fatNeed:75, weight:null, trainKcal:1928, trainMin:146},
+  {date:"2026-07-04", kcalIn:3487, cho:366, pro:160, fat:164, kcalNeed:3994, choNeed:680, proNeed:150, fatNeed:75, weight:74.3, trainKcal:1894, trainMin:130},
+  {date:"2026-07-05", kcalIn:3849, cho:544, pro:127, fat:104, kcalNeed:4096, choNeed:705, proNeed:150, fatNeed:75, weight:72.9, trainKcal:1996, trainMin:152},
+  {date:"2026-07-06", kcalIn:3577, cho:479, pro:185, fat:66, kcalNeed:2869, choNeed:398, proNeed:150, fatNeed:75, weight:74.1, trainKcal:769, trainMin:76},
+  {date:"2026-07-07", kcalIn:4084, cho:606, pro:204, fat:97, kcalNeed:4209, choNeed:734, proNeed:150, fatNeed:75, weight:73.9, trainKcal:2109, trainMin:151},
+  {date:"2026-07-08", kcalIn:3569, cho:613, pro:165, fat:56, kcalNeed:4531, choNeed:814, proNeed:150, fatNeed:75, weight:74.4, trainKcal:2431, trainMin:167},
+  {date:"2026-07-09", kcalIn:3509, cho:445, pro:207, fat:56, kcalNeed:2915, choNeed:410, proNeed:150, fatNeed:75, weight:74.4, trainKcal:815, trainMin:89},
+  {date:"2026-07-10", kcalIn:4111, cho:655, pro:208, fat:78, kcalNeed:3988, choNeed:678, proNeed:150, fatNeed:75, weight:74.0, trainKcal:1888, trainMin:149},
+  {date:"2026-07-11", kcalIn:4738, cho:828, pro:185, fat:84, kcalNeed:4749, choNeed:868, proNeed:150, fatNeed:75, weight:73.8, trainKcal:2649, trainMin:196},
+  {date:"2026-07-12", kcalIn:2790, cho:409, pro:184, fat:55, kcalNeed:3111, choNeed:459, proNeed:150, fatNeed:75, weight:null, trainKcal:1011, trainMin:111},
+  {date:"2026-07-13", kcalIn:2667, cho:337, pro:165, fat:74, kcalNeed:3236, choNeed:490, proNeed:150, fatNeed:75, weight:73.1, trainKcal:1136, trainMin:108},
+  {date:"2026-07-14", kcalIn:3923, cho:580, pro:182, fat:107, kcalNeed:3974, choNeed:675, proNeed:150, fatNeed:75, weight:null, trainKcal:1874, trainMin:165},
+  {date:"2026-07-15", kcalIn:2890, cho:432, pro:170, fat:61, kcalNeed:3429, choNeed:538, proNeed:150, fatNeed:75, weight:null, trainKcal:1329, trainMin:103},
+  {date:"2026-07-16", kcalIn:2438, cho:398, pro:85, fat:58, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-07-17", kcalIn:3466, cho:368, pro:176, fat:137, kcalNeed:3416, choNeed:535, proNeed:150, fatNeed:75, weight:72.6, trainKcal:1316, trainMin:112},
+  {date:"2026-07-18", kcalIn:3487, cho:445, pro:112, fat:104, kcalNeed:3578, choNeed:576, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1478, trainMin:118},
+  {date:"2026-07-19", kcalIn:3219, cho:407, pro:133, fat:120, kcalNeed:3479, choNeed:551, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1379, trainMin:116},
+  {date:"2026-07-20", kcalIn:3385, cho:369, pro:154, fat:146, kcalNeed:2694, choNeed:355, proNeed:150, fatNeed:75, weight:73.4, trainKcal:594, trainMin:56},
+  {date:"2026-07-21", kcalIn:3571, cho:394, pro:224, fat:111, kcalNeed:3770, choNeed:624, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1670, trainMin:151},
+  {date:"2026-07-22", kcalIn:3542, cho:465, pro:122, fat:134, kcalNeed:3530, choNeed:564, proNeed:150, fatNeed:75, weight:73.3, trainKcal:1430, trainMin:134},
+  {date:"2026-07-23", kcalIn:3057, cho:437, pro:118, fat:85, kcalNeed:3606, choNeed:583, proNeed:150, fatNeed:75, weight:72.4, trainKcal:1506, trainMin:120},
+  {date:"2026-07-24", kcalIn:3204, cho:436, pro:141, fat:91, kcalNeed:3573, choNeed:574, proNeed:150, fatNeed:75, weight:72.8, trainKcal:1473, trainMin:129},
+  {date:"2026-07-25", kcalIn:3315, cho:282, pro:159, fat:173, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-07-26", kcalIn:3595, cho:408, pro:124, fat:96, kcalNeed:3571, choNeed:574, proNeed:150, fatNeed:75, weight:72.5, trainKcal:1471, trainMin:124},
+  {date:"2026-07-27", kcalIn:3950, cho:484, pro:162, fat:169, kcalNeed:3502, choNeed:557, proNeed:150, fatNeed:75, weight:72.6, trainKcal:1402, trainMin:124},
+  {date:"2026-07-28", kcalIn:3539, cho:282, pro:195, fat:114, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-07-29", kcalIn:3627, cho:339, pro:177, fat:175, kcalNeed:3744, choNeed:617, proNeed:150, fatNeed:75, weight:73.2, trainKcal:1644, trainMin:126},
+  {date:"2026-07-30", kcalIn:4284, cho:447, pro:180, fat:201, kcalNeed:3692, choNeed:604, proNeed:150, fatNeed:75, weight:null, trainKcal:1592, trainMin:121},
+  {date:"2026-07-31", kcalIn:2879, cho:376, pro:153, fat:87, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-08-01", kcalIn:3041, cho:415, pro:168, fat:81, kcalNeed:3943, choNeed:667, proNeed:150, fatNeed:75, weight:74.0, trainKcal:1843, trainMin:126},
+  {date:"2026-08-02", kcalIn:4199, cho:622, pro:206, fat:94, kcalNeed:4811, choNeed:884, proNeed:150, fatNeed:75, weight:72.7, trainKcal:2711, trainMin:185},
+  {date:"2026-08-03", kcalIn:3106, cho:388, pro:174, fat:99, kcalNeed:2608, choNeed:333, proNeed:150, fatNeed:75, weight:73.2, trainKcal:508, trainMin:61},
+  {date:"2026-08-04", kcalIn:4254, cho:725, pro:210, fat:57, kcalNeed:4583, choNeed:827, proNeed:150, fatNeed:75, weight:72.5, trainKcal:2483, trainMin:166},
+  {date:"2026-08-05", kcalIn:3964, cho:688, pro:182, fat:62, kcalNeed:4364, choNeed:772, proNeed:150, fatNeed:75, weight:73.2, trainKcal:2264, trainMin:147},
+  {date:"2026-08-06", kcalIn:3394, cho:458, pro:205, fat:84, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:73.8, trainKcal:0, trainMin:0},
+  {date:"2026-08-07", kcalIn:3576, cho:531, pro:201, fat:75, kcalNeed:3881, choNeed:652, proNeed:150, fatNeed:75, weight:74.2, trainKcal:1781, trainMin:125},
+  {date:"2026-08-08", kcalIn:3752, cho:588, pro:196, fat:65, kcalNeed:3468, choNeed:548, proNeed:150, fatNeed:75, weight:73.5, trainKcal:1368, trainMin:99},
+  {date:"2026-08-09", kcalIn:4774, cho:878, pro:191, fat:60, kcalNeed:4922, choNeed:912, proNeed:150, fatNeed:75, weight:73.3, trainKcal:2822, trainMin:198},
+  {date:"2026-08-10", kcalIn:2930, cho:364, pro:169, fat:93, kcalNeed:2637, choNeed:340, proNeed:150, fatNeed:75, weight:74.2, trainKcal:537, trainMin:60},
+  {date:"2026-08-11", kcalIn:3456, cho:560, pro:172, fat:63, kcalNeed:3600, choNeed:581, proNeed:150, fatNeed:75, weight:null, trainKcal:1500, trainMin:109},
+  {date:"2026-08-12", kcalIn:4729, cho:817, pro:193, fat:79, kcalNeed:5832, choNeed:1139, proNeed:150, fatNeed:75, weight:73.9, trainKcal:3732, trainMin:248},
+  {date:"2026-08-13", kcalIn:3612, cho:587, pro:207, fat:61, kcalNeed:3470, choNeed:549, proNeed:150, fatNeed:75, weight:73.6, trainKcal:1370, trainMin:126},
+  {date:"2026-08-14", kcalIn:4341, cho:659, pro:216, fat:96, kcalNeed:4374, choNeed:775, proNeed:150, fatNeed:75, weight:null, trainKcal:2274, trainMin:147},
+  {date:"2026-08-15", kcalIn:4128, cho:640, pro:184, fat:92, kcalNeed:3511, choNeed:559, proNeed:150, fatNeed:75, weight:74.3, trainKcal:1411, trainMin:131},
+  {date:"2026-08-16", kcalIn:4716, cho:801, pro:132, fat:106, kcalNeed:5644, choNeed:1092, proNeed:150, fatNeed:75, weight:74.2, trainKcal:3544, trainMin:268},
+  {date:"2026-08-17", kcalIn:3487, cho:460, pro:216, fat:90, kcalNeed:2841, choNeed:392, proNeed:150, fatNeed:75, weight:73.9, trainKcal:741, trainMin:67},
+  {date:"2026-08-18", kcalIn:4129, cho:712, pro:223, fat:46, kcalNeed:4238, choNeed:741, proNeed:150, fatNeed:75, weight:74.1, trainKcal:2138, trainMin:161},
+  {date:"2026-08-19", kcalIn:4637, cho:882, pro:172, fat:51, kcalNeed:5875, choNeed:1150, proNeed:150, fatNeed:75, weight:74.3, trainKcal:3775, trainMin:255},
+  {date:"2026-08-20", kcalIn:4493, cho:483, pro:155, fat:140, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:74.2, trainKcal:0, trainMin:0},
+  {date:"2026-08-21", kcalIn:3599, cho:568, pro:157, fat:90, kcalNeed:3633, choNeed:590, proNeed:150, fatNeed:75, weight:73.1, trainKcal:1533, trainMin:113},
+  {date:"2026-08-22", kcalIn:3791, cho:619, pro:204, fat:66, kcalNeed:3574, choNeed:575, proNeed:150, fatNeed:75, weight:74.2, trainKcal:1474, trainMin:110},
+  {date:"2026-08-23", kcalIn:3843, cho:662, pro:103, fat:89, kcalNeed:2922, choNeed:412, proNeed:150, fatNeed:75, weight:73.8, trainKcal:822, trainMin:50},
+  {date:"2026-08-24", kcalIn:3660, cho:585, pro:181, fat:68, kcalNeed:3871, choNeed:649, proNeed:150, fatNeed:75, weight:74.3, trainKcal:1771, trainMin:129},
+  {date:"2026-08-25", kcalIn:3402, cho:610, pro:161, fat:47, kcalNeed:3807, choNeed:633, proNeed:150, fatNeed:75, weight:74.0, trainKcal:1707, trainMin:127},
+  {date:"2026-08-26", kcalIn:3200, cho:494, pro:144, fat:80, kcalNeed:3978, choNeed:676, proNeed:150, fatNeed:75, weight:74.4, trainKcal:1878, trainMin:132},
+  {date:"2026-08-27", kcalIn:3803, cho:502, pro:135, fat:140, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-08-28", kcalIn:2414, cho:292, pro:85, fat:98, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:null, trainKcal:0, trainMin:0},
+  {date:"2026-08-29", kcalIn:3636, cho:543, pro:195, fat:84, kcalNeed:4197, choNeed:730, proNeed:150, fatNeed:75, weight:null, trainKcal:2097, trainMin:191},
+  {date:"2026-08-30", kcalIn:5322, cho:949, pro:183, fat:95, kcalNeed:5708, choNeed:1108, proNeed:150, fatNeed:75, weight:74.3, trainKcal:3608, trainMin:256},
+  {date:"2026-08-31", kcalIn:5280, cho:797, pro:187, fat:154, kcalNeed:6274, choNeed:1250, proNeed:150, fatNeed:75, weight:74.1, trainKcal:4174, trainMin:377},
+  {date:"2026-09-01", kcalIn:5309, cho:766, pro:212, fat:162, kcalNeed:6418, choNeed:1286, proNeed:150, fatNeed:75, weight:75.2, trainKcal:4318, trainMin:363},
+  {date:"2026-09-02", kcalIn:4222, cho:606, pro:166, fat:129, kcalNeed:4466, choNeed:798, proNeed:150, fatNeed:75, weight:73.6, trainKcal:2366, trainMin:184},
+  {date:"2026-09-03", kcalIn:3906, cho:284, pro:191, fat:176, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:73.8, trainKcal:0, trainMin:0},
+  {date:"2026-09-04", kcalIn:3808, cho:367, pro:186, fat:128, kcalNeed:2100, choNeed:206, proNeed:150, fatNeed:75, weight:74.2, trainKcal:0, trainMin:0},
+  {date:"2026-09-05", kcalIn:3821, cho:596, pro:196, fat:73, kcalNeed:3634, choNeed:590, proNeed:150, fatNeed:75, weight:73.1, trainKcal:1534, trainMin:112},
+  {date:"2026-09-06", kcalIn:5220, cho:901, pro:203, fat:93, kcalNeed:6268, choNeed:1248, proNeed:150, fatNeed:75, weight:73.3, trainKcal:4168, trainMin:304},
+];
+/* === DATA-SLUTT === */
+
+/* ---------- hjelpere ---------- */
+const NB = "\u00A0";
+const nf = (v,d=0)=> v==null || Number.isNaN(v) ? "–"
+  : v.toLocaleString("nb-NO",{minimumFractionDigits:d,maximumFractionDigits:d});
+const sgn = (v,d=0)=> v==null ? "–" : (v>0?"+":v<0?"\u2212":"") + nf(Math.abs(v),d);
+const WD = ["søn","man","tir","ons","tor","fre","lør"];
+const dObj = s => new Date(s+"T00:00:00Z");
+const fmtDay = s => { const d=dObj(s); return WD[d.getUTCDay()]+" "+d.getUTCDate()+"."+(d.getUTCMonth()+1)+"."; };
+const fmtShort = s => { const d=dObj(s); return d.getUTCDate()+"."+(d.getUTCMonth()+1)+"."; };
+
+function rolling(arr, win, pick){
+  const MINW = Math.ceil(win*0.6);          // delvis vindu godtas ned til 60 % dekning
+  return arr.map((_,i)=>{
+    if(i < MINW-1) return null;
+    const v = [];
+    for(let k=Math.max(0,i-win+1);k<=i;k++){ const x = pick(arr[k]); if(x!=null) v.push(x); }
+    return v.length < MINW ? null : v.reduce((a,b)=>a+b,0)/v.length;
+  });
+}
+function isoWeek(s){
+  const d = dObj(s); const day = (d.getUTCDay()+6)%7;
+  d.setUTCDate(d.getUTCDate()-day+3);
+  const first = new Date(Date.UTC(d.getUTCFullYear(),0,4));
+  const w = 1 + Math.round(((d-first)/86400000 - 3 + ((first.getUTCDay()+6)%7))/7);
+  return d.getUTCFullYear()+"-"+String(w).padStart(2,"0");
+}
+/* Dager uten registrert inntak har kcalIn/makro = null. Avvik mot behov regnes bare når
+   begge finnes — ellers blir en tom dag lest som et underskudd på hele behovet. */
+const diff = (v, n) => v==null || n==null ? null : v-n;
+const balOf = d => diff(d.kcalIn, d.kcalNeed);
+const harInntak = d => d.kcalIn != null;
+
+/* ---------- tilstand ---------- */
+let selected = DAYS.length-1;   // hvilken dag dagskortet, makroene og uketabellen står på
+
+/* ---------- topptekst ---------- */
+document.getElementById("rangeLabel").textContent =
+  fmtShort(DAYS[0].date)+"–"+fmtShort(DAYS[DAYS.length-1].date)+" · "+DAYS.length+" dager";
+
+/* ---------- dagskort ---------- */
+function renderDay(){
+  const d = DAYS[selected];
+  const bal = balOf(d);
+  document.getElementById("dayDate").textContent = fmtDay(d.date);
+  const bv = document.getElementById("balVal");
+  bv.textContent = sgn(bal);
+  bv.style.color = bal==null ? "var(--muted)" : bal < 0 ? "var(--under)" : "var(--over)";
+  document.getElementById("balCap").textContent =
+    bal==null ? "inntak ikke registrert" : bal < 0 ? "under behov" : "over behov";
+  document.getElementById("kIn").innerHTML = d.kcalIn==null
+    ? "– <small>ikke registrert</small>" : nf(d.kcalIn)+" <small>kcal</small>";
+  document.getElementById("kNeed").innerHTML = nf(d.kcalNeed)+" <small>kcal</small>";
+  document.getElementById("kTrain").innerHTML = nf(d.trainKcal)+" <small>kcal</small>";
+  document.getElementById("kWeight").innerHTML = d.weight==null
+    ? "– <small>ikke målt</small>" : nf(d.weight,1)+" <small>kg</small>";
+  renderWeeks();
+  renderWindow(7,  "r7Label",  "bal7",  "bal7cap");
+  renderWindow(21, "r21Label", "bal21", "bal21cap");
+  renderMacros(d);
+  document.querySelectorAll(".cell").forEach((c,i)=>c.classList.toggle("sel", i===selected-Math.max(0,DAYS.length-21)));
+}
+
+function renderWindow(win, idLabel, idVal, idCap){
+  const from = Math.max(0, selected-win+1);
+  const nDays = selected+1-from, part = nDays < win;
+  const win_ = DAYS.slice(from, selected+1).filter(harInntak);
+  const nReg = win_.length;
+  document.getElementById(idLabel).textContent = win+" dager · "
+    + fmtShort(DAYS[from].date)+"–"+fmtShort(DAYS[selected].date)
+    + (nReg < nDays ? " ("+nReg+" reg.)" : part ? " ("+nDays+" d)" : "");
+  const el = document.getElementById(idVal), cap = document.getElementById(idCap);
+  if(nReg < Math.ceil(win*0.6)){ el.textContent = "–"; el.style.color="var(--muted)";
+    cap.textContent = nDays < Math.ceil(win*0.6) ? "for lite historikk" : "for få registrerte dager";
+    cap.style.color="var(--muted)"; return; }
+  const sum = win_.reduce((a,b)=>a+balOf(b),0);
+  const need = win_.reduce((a,b)=>a+b.kcalNeed,0);
+  const avg = sum/nReg;
+  const pct = need ? sum/need*100 : null;
+  el.textContent = sgn(avg);
+  el.style.color = avg<0 ? "var(--under)" : "var(--over)";
+  cap.innerHTML = `<span style="color:${sum<0?"var(--under)":"var(--over)"};font-weight:600">${sgn(pct,1)} %</span>
+    <span style="color:var(--muted)">av behov · ${sum<0?"underskudd":"overskudd"}</span>`;
+}
+
+function winMean(win, f, bare){
+  const from = Math.max(0, selected-win+1);
+  if(selected+1-from < Math.ceil(win*0.6)) return null;
+  // bare: snitt kun over dager der den målte verdien finnes, så inntak og behov sammenlignes på samme dager
+  const a = DAYS.slice(from, selected+1).filter(d=>!bare || bare(d)!=null).map(f).filter(v=>v!=null);
+  return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+}
+
+function renderMacros(d){
+  const REF = 70; // behovet ligger alltid her, slik at radene leses mot samme referanse
+  const macros = [
+    {k:"Karbohydrat", c:"var(--cho)", v:x=>x.cho, n:x=>x.choNeed},
+    {k:"Protein",     c:"var(--pro)", v:x=>x.pro, n:x=>x.proNeed},
+    {k:"Fett",        c:"var(--fat)", v:x=>x.fat, n:x=>x.fatNeed}
+  ];
+  const wins = [
+    {lab:"Dag",  now:true,  v:m=>m.v(d),          n:m=>m.n(d),          w:()=>d.weight},
+    {lab:"7 d",  now:false, v:m=>winMean(7,m.v),  n:m=>winMean(7,m.n,m.v),  w:()=>winMean(7,x=>x.weight)},
+    {lab:"21 d", now:false, v:m=>winMean(21,m.v), n:m=>winMean(21,m.n,m.v), w:()=>winMean(21,x=>x.weight)}
+  ];
+  // choNeed per kg over det tarmen kan ta opp: dagen leses som «kan ikke fôres fullt», ikke som bom
+  const kgDag = d.weight ?? winMean(7, x=>x.weight);
+  const ikkeForbar = VIS_IKKE_FORBAR && kgDag!=null && d.choNeed/kgDag > IKKE_FORBAR_GKG;
+  document.getElementById("macroBars").innerHTML = macros.map(m=>`
+    <div class="mgroup">
+      <div class="mname">${m.k}${ikkeForbar && m.k==="Karbohydrat"
+        ? ` <span style="font-weight:400;color:var(--muted)">· kan ikke fôres fullt</span>` : ""}</div>
+      ${wins.map(win=>{
+        const v = win.v(m), n = win.n(m), w = win.w();
+        if(v==null || n==null) return `<div class="mrow${win.now?" now":""}">
+          <span class="mwin">${win.lab}</span>
+          <span class="track"><i class="tick" style="left:${REF}%"></i></span>
+          <span class="mval">${win.now?"ikke registrert":"for lite historikk"}</span></div>`;
+        const gap = v-n;
+        const gapCol = win.now && ikkeForbar && m.k==="Karbohydrat" && gap<0 ? "var(--muted)"
+          : gap<0 ? "var(--under)" : "var(--over)";
+        return `<div class="mrow${win.now?" now":""}">
+          <span class="mwin">${win.lab}</span>
+          <span class="track">
+            <i class="fill" style="width:${Math.min(100, v/n*REF).toFixed(1)}%;background:${m.c}"></i>
+            <i class="tick" style="left:${REF}%" ${win.now?`data-l="${nf(n)}${NB}g"`:""}></i>
+          </span>
+          <span class="mval num"><b>${nf(v)}</b>${NB}g${w?" · "+nf(v/w,1)+NB+"g/kg":""}
+            <span class="gap" style="color:${gapCol}">${sgn(gap)}</span></span>
+        </div>`;
+      }).join("")}
+    </div>`).join("") ;
+}
+
+/* ---------- dagsstripe ---------- */
+function renderStrip(){
+  const days = DAYS.slice(-21);
+  const off = Math.max(0, DAYS.length-21);
+  const max = Math.max(1, ...days.filter(harInntak).map(d=>Math.abs(balOf(d))));
+  document.getElementById("strip").innerHTML = days.map((d,i)=>{
+    const b = balOf(d), h = b==null ? 0 : Math.max(2, Math.abs(b)/max*13);
+    const up = b>0;
+    return `<button class="cell" data-i="${off+i}" aria-label="${fmtDay(d.date)}, ${b==null ? "inntak ikke registrert" : "balanse "+sgn(b)+" kcal"}">
+      <span class="wd">${WD[dObj(d.date).getUTCDay()]}</span>
+      <span class="dd num">${dObj(d.date).getUTCDate()}</span>
+      <span class="bar">
+        <span class="up"><b style="height:${up?h:0}px;background:var(--over)"></b></span>
+        <span class="mid"></span>
+        <span class="dn"><b style="height:${up?0:h}px;background:var(--under)"></b></span>
+      </span></button>`;
+  }).join("");
+  document.querySelectorAll(".cell").forEach(c=>c.addEventListener("click",()=>{
+    selected = +c.dataset.i; renderDay(); renderChart();
+  }));
+}
+
+/* ---------- trend: retning siste 21 dager ---------- */
+/* To ting avgjør konklusjonen: stigningen (minste kvadraters regresjon på de daglige verdiene)
+   OG hvor godt den skiller seg fra støyen. En drift som forsvinner i dag-til-dag-variasjonen
+   meldes som "ingen tydelig retning", uansett hvor stor den ser ut i absolutte tall.
+   Karbo, protein og fett måles ikke som nivå, men som avvik mot dagens behov — behovet
+   flytter seg med treningsbelastningen, så et stabilt inntak kan være en fallende trend. */
+const TSERIES = [
+  {label:"Energibalanse", sub:"inntak mot behov", unit:"kcal", dec:0, col:"#2F3A4B", min:15,
+   val:balOf,                          avvik:true},
+  {label:"Karbohydrat",   sub:"avvik mot behov",  unit:"g",    dec:0, col:"#B5851B", min:3,
+   val:d=>diff(d.cho,d.choNeed),       avvik:true},
+  {label:"Protein",       sub:"avvik mot behov",  unit:"g",    dec:0, col:"#35678F", min:1.5,
+   val:d=>diff(d.pro,d.proNeed),       avvik:true},
+  {label:"Fett",          sub:"avvik mot behov",  unit:"g",    dec:0, col:"#7A6091", min:1,
+   val:d=>diff(d.fat,d.fatNeed),       avvik:true},
+  {label:"Vekt",          sub:"nivå",             unit:"kg",   dec:2, col:"#2F3A4B", min:0.015,
+   val:d=>d.weight, uke:true}
+];
+const TWIN = 21;     // vindu for retningen
+const TMIN = 2.0;    // |t| under dette: stigningen skilles ikke fra støyen
+/* Hver serie har sin egen terskel for hva som er en endring verdt å melde (min, per dag).
+   En felles prosentregel gjør ikke nytten: 3 % av vekta er 2,2 kg, 3 % av treningstida er 6 min.
+   Tallene under er satt av meg og skal justeres når vi ser hvor mye de ekte dataene svinger. */
+
+function fitLine(pts){
+  const n = pts.length;
+  if(n < 5) return null;
+  const mx = pts.reduce((a,p)=>a+p[0],0)/n, my = pts.reduce((a,p)=>a+p[1],0)/n;
+  let sxy=0, sxx=0;
+  pts.forEach(([px,py])=>{ sxy += (px-mx)*(py-my); sxx += (px-mx)**2; });
+  if(!sxx) return null;
+  const k = sxy/sxx, m = my-k*mx;
+  let sse=0;
+  pts.forEach(([px,py])=>{ sse += (py-(k*px+m))**2; });
+  const se = Math.sqrt(sse/(n-2)/sxx);           // standardfeil for stigningen
+  return {k, mean:my, t: se ? k/se : 0};
+}
+
+function renderChart(){
+  const from = Math.max(0, selected-TWIN+1);
+  const win = DAYS.slice(from, selected+1);
+  document.getElementById("trendNote").textContent =
+    fmtShort(DAYS[from].date)+"–"+fmtShort(DAYS[selected].date)
+    + (win.length<TWIN ? " ("+win.length+" av "+TWIN+" dager)" : "");
+
+  const cellFor = s => {
+    const pts = win.map((d,i)=>[i, s.val(d)]).filter(p=>p[1]!=null);
+    const f = pts.length>=Math.ceil(TWIN*0.6) ? fitLine(pts) : null;
+
+    const over  = f ? f.k*(TWIN-1) : null;
+    const small = !f || Math.abs(f.k) < s.min;          // under terskel for å melde noe
+    const noisy = !!f && !small && Math.abs(f.t) < TMIN; // stor nok, men drukner i variasjonen
+    const flat  = !f || small;
+
+    const deg = flat ? 0 : Math.max(-34, Math.min(34, f.k/s.min*12));
+    const dir = !f ? "Ikke nok data"
+      : small ? "Stabil"
+      : noisy ? (f.k>0 ? "Mulig stigning" : "Mulig fall")
+      : (f.k>0 ? "Stigende trend" : "Synkende trend");
+    const col = !f ? "var(--muted)" : small ? "#96A0AE" : noisy ? "#7E8899" : s.col;
+
+    const fmtR = (v,d)=>{ const t=sgn(v,d); return /^[+\u2212]0(,0+)?$/.test(t) ? t.slice(1) : t; };
+    const dd = v => s.dec>0 ? s.dec : (Math.abs(v)<1 ? 1 : 0);
+    const rate = !f ? "–"
+      : fmtR(f.k, dd(f.k))+" "+s.unit+"/dag"
+        + (s.uke ? " · "+fmtR(f.k*7,1)+" "+s.unit+"/uke" : "");
+    const tot = !f ? "" : fmtR(over, dd(over))+" "+s.unit+" over "+TWIN+" dager"
+      + (s.avvik ? " · snitt "+fmtR(f.mean, dd(f.mean))+" "+s.unit+" mot behov" : "")
+      + (noisy ? " · svinger mye, retningen er usikker" : "");
+
+    return `<div class="tcell">
+      ${arrowSVG(deg, col, flat, noisy)}
+      <div class="ttext">
+        <div class="tname">${s.label} <span style="color:#A9B2BE">· ${s.sub}</span></div>
+        <div class="tdir" style="color:${col}">${dir}</div>
+        <div class="trate num">${rate}</div>
+        <div class="ttot num">${tot}</div>
+      </div>
+    </div>`;
+  };
+  const by = n => TSERIES.find(s=>s.label===n);
+  document.getElementById("trendTop").innerHTML =
+    [by("Energibalanse"), by("Vekt")].map(cellFor).join("");
+  document.getElementById("trendBottom").innerHTML =
+    [by("Karbohydrat"), by("Protein"), by("Fett")].map(cellFor).join("");
+}
+
+function arrowSVG(deg, col, flat, noisy){
+  const a = deg*Math.PI/180;
+  const x1=6, x2=112, cy=31, d=(x2-x1)/2*Math.tan(a);
+  const y1=cy+d, y2=cy-d;
+  const ang = Math.atan2(y2-y1, x2-x1);
+  const head = (o)=>[ (x2-15*Math.cos(ang-o)).toFixed(1), (y2-15*Math.sin(ang-o)).toFixed(1) ].join(",");
+  return `<svg class="tarrow" viewBox="0 0 120 62" aria-hidden="true">
+    <line x1="${x1}" y1="${y1.toFixed(1)}" x2="${(x2-7).toFixed(1)}" y2="${(y2+7*Math.tan(a)).toFixed(1)}"
+      stroke="${col}" stroke-width="${flat?4:5}" stroke-linecap="butt" ${noisy?'stroke-dasharray="7 4"':""}/>
+    <polygon points="${x2},${y2.toFixed(1)} ${head(0.42)} ${head(-0.42)}" fill="${col}"/>
+  </svg>`;
+}
+
+/* ---------- uketabell ---------- */
+const perKg=(v,kg)=> v==null ? null : v/kg;
+
+function wmean(rows,key){ const v=rows.map(r=>r[key]).filter(x=>x!=null&&!Number.isNaN(x));
+  return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; }
+
+function renderWeeks(){
+  const map = new Map();
+  DAYS.forEach(d=>{ const k=isoWeek(d.date); if(!map.has(k)) map.set(k,[]); map.get(k).push(d); });
+  const all = [...map.entries()];
+  const rowsAll = all.map(([k,ds],idx)=>{
+    const n = ds.length;
+    const s = f => ds.reduce((a,b)=>a+(f(b)||0),0);
+    const avg = f => { const v=ds.map(f).filter(x=>x!=null); return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; };
+    const wts = ds.map(d=>d.weight).filter(v=>v!=null);
+    const wAvg = wts.length ? wts.reduce((a,b)=>a+b,0)/wts.length : null;
+    const prev = idx>0 ? (()=>{ const p=all[idx-1][1].map(d=>d.weight).filter(v=>v!=null);
+      return p.length ? p.reduce((a,b)=>a+b,0)/p.length : null; })() : null;
+    const kgRef = wAvg || 74;
+    // inntak, behov og balanse bare over dager med registrert inntak
+    const reg = ds.filter(harInntak), nReg = reg.length;
+    const sR = f => reg.reduce((a,b)=>a+f(b),0);
+    return {
+      uke: k.slice(5), dager:n, reg:nReg, kcalIn:sR(d=>d.kcalIn), kcalNeed:sR(d=>d.kcalNeed), min:s(d=>d.trainMin),
+      inn: nReg ? sR(d=>d.kcalIn)/nReg : null, behov: nReg ? sR(d=>d.kcalNeed)/nReg : null, bal: nReg ? sR(balOf) : null,
+      cho: perKg(avg(d=>d.cho),kgRef), pro: perKg(avg(d=>d.pro),kgRef), fat: perKg(avg(d=>d.fat),kgRef),
+      tim: s(d=>d.trainMin)/60, vekt:wAvg, dv: (wAvg!=null&&prev!=null)? wAvg-prev : null
+    };
+  });
+  // vinduet: uka valgt dato ligger i, pluss fem uker bakover — nyeste først
+  const selWeek = isoWeek(DAYS[selected].date);
+  const selIdx = all.findIndex(([k])=>k===selWeek);
+  const win = rowsAll.slice(Math.max(0, selIdx-5), selIdx+1);
+  const days = win.reduce((a,r)=>a+r.dager,0), regDays = win.reduce((a,r)=>a+r.reg,0);
+  const balSum = regDays ? win.reduce((a,r)=>a+(r.bal||0),0) : null;
+  const balCol = v => v==null ? "var(--muted)" : v<0 ? "var(--under)" : "var(--over)";
+  const dagTekst = (reg,n) => reg<n ? reg+"/"+n : String(n);
+  const rows = win.slice().reverse();
+  document.getElementById("weekTable").innerHTML = `
+    <thead><tr><th>Uke</th><th>Dager</th><th>Trening</th><th>Inn</th><th>Behov</th><th>Balanse</th>
+      <th>KH</th><th>Prot</th><th>Fett</th><th>Vekt</th><th>Δ vekt</th></tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr class="${i===0?"cur":""}">
+      <td class="num">${r.uke}</td><td class="num">${dagTekst(r.reg,r.dager)}</td><td class="num">${nf(r.tim,1)} t</td>
+      <td class="num">${nf(r.inn)}</td><td class="num">${nf(r.behov)}</td>
+      <td class="num" style="color:${balCol(r.bal)}">${sgn(r.bal)}</td>
+      <td class="num">${nf(r.cho,1)}</td><td class="num">${nf(r.pro,1)}</td><td class="num">${nf(r.fat,2)}</td>
+      <td class="num">${nf(r.vekt,1)}</td><td class="num">${sgn(r.dv,1)}</td>
+    </tr>`).join("")}</tbody>
+    <tfoot><tr style="border-top:1px solid var(--line)">
+      <td>${win.length} uker samlet</td><td class="num">${dagTekst(regDays,days)}</td>
+      <td class="num">${nf(win.reduce((a,r)=>a+r.min,0)/60,1)} t</td>
+      <td class="num">${regDays ? nf(win.reduce((a,r)=>a+r.kcalIn,0)/regDays) : "–"}</td>
+      <td class="num">${regDays ? nf(win.reduce((a,r)=>a+r.kcalNeed,0)/regDays) : "–"}</td>
+      <td class="num" style="color:${balCol(balSum)}">${sgn(balSum)}</td>
+      <td class="num">${nf(wmean(win,"cho"),1)}</td>
+      <td class="num">${nf(wmean(win,"pro"),1)}</td>
+      <td class="num">${nf(wmean(win,"fat"),2)}</td>
+      <td class="num">${nf(win.at(-1).vekt,1)}</td>
+      <td class="num">${(win.at(-1).vekt!=null&&win[0].vekt!=null)?sgn(win.at(-1).vekt-win[0].vekt,1):"–"}</td>
+    </tr></tfoot>`;
+}
+
+/* ---------- rullerende panel ---------- */
+function renderRolling(){
+  const last = a => { for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return a[i]; return null; };
+  const defs = [
+    ["Inntak","kcal", d=>d.kcalIn, 0],
+    ["Behov","kcal", d=>harInntak(d)?d.kcalNeed:null, 0],
+    ["Balanse","kcal", d=>balOf(d), 0],
+    ["Karbohydrat","g/kg", d=>d.weight&&d.cho!=null?d.cho/d.weight:null, 1],
+    ["Protein","g/kg", d=>d.weight&&d.pro!=null?d.pro/d.weight:null, 1],
+    ["Fett","g/kg", d=>d.weight&&d.fat!=null?d.fat/d.weight:null, 2],
+    ["Vekt","kg", d=>d.weight, 1],
+    ["Treningstid","t/uke", d=>d.trainMin/60*7, 1]
+  ];
+  document.getElementById("rollRows").innerHTML = defs.map(([n,u,f,dec])=>{
+    const a = last(rolling(DAYS,7,f)), b = last(rolling(DAYS,21,f));
+    const dd = diff(a, b);
+    const col = dd==null ? "var(--muted)" : (n==="Balanse"||n==="Inntak"||n==="Karbohydrat")
+      ? (dd<0?"var(--under)":"var(--over)") : "var(--ink-2)";
+    return `<div class="rollrow"><span class="d">${n} <span style="color:var(--muted);font-size:11.5px">${u}</span></span>
+      <span>${nf(a,dec)}</span><span>${nf(b,dec)}</span>
+      <span style="color:${col}">${sgn(dd,dec)}</span></div>`;
+  }).join("");
+}
+
+renderStrip(); renderDay(); renderChart(); renderRolling();
+(function scrollToSelected(){
+  const c = document.querySelectorAll(".cell")[selected-Math.max(0,DAYS.length-21)];
+  if(c) c.scrollIntoView({block:"nearest", inline:"end"});
+})();
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
+</script>
+</body>
+</html>
